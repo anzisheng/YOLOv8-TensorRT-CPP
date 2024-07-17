@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     YoloV8Config config;
     std::string onnxModelPath = "../models/yolo8n.onnx";
-    std::string inputImage = "images/person.jpg";
+    std::string inputImage = "images/6.jpg";
 
     // Parse the command line arguments
     if (!parseArguments(argc, argv, config, onnxModelPath, inputImage)) {

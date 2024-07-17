@@ -40,3 +40,4 @@ cmake-build-*
 *.pt
 
 .vscode
+*.jpg

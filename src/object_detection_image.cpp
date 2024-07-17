@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
 
     // Create the YoloV8 engine
     YoloV8 yoloV8(onnxModelPath, config);
+    
 
     // Read the input image
     auto img = cv::imread(inputImage);

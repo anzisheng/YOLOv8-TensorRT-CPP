@@ -1,4 +1,5 @@
-//./detect_object_image --model /home/an/projects/YOLOv8-TensorRT-CPP/models/yolov8n.onnx --input ../images/person.jpg
+//./detect_object_image --model /home/an/projects/YOLOv8-TensorRT-CPP/models/yolov8n.onnx --input ../images/person.jpg //detect person
+//./detect_object_image --model /home/an/projects/YOLOv8-TensorRT-CPP/models/yoloface_8n.onnx --input ../images/person.jpg  //detect face
 
 #include "cmd_line_util.h"
 #include "yolov8.h"
@@ -7,7 +8,7 @@
 int main(int argc, char *argv[]) {
     YoloV8Config config;
     std::string onnxModelPath = "../models/yolo8n.onnx";
-    std::string inputImage = "images/6.jpg";
+    std::string inputImage = "images/person.jpg";
 
     // Parse the command line arguments
     if (!parseArguments(argc, argv, config, onnxModelPath, inputImage)) {

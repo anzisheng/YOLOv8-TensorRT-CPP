@@ -1,11 +1,13 @@
+//./detect_object_image --model /home/an/projects/YOLOv8-TensorRT-CPP/models/yolov8n.onnx --input ../images/person.jpg
+
 #include "cmd_line_util.h"
 #include "yolov8.h"
 
 // Runs object detection on an input image then saves the annotated image to disk.
 int main(int argc, char *argv[]) {
     YoloV8Config config;
-    std::string onnxModelPath;
-    std::string inputImage;
+    std::string onnxModelPath = "../models/yolo8n.onnx";
+    std::string inputImage = "images/6.jpg";
 
     // Parse the command line arguments
     if (!parseArguments(argc, argv, config, onnxModelPath, inputImage)) {

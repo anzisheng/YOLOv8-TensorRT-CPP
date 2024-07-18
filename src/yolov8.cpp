@@ -1,6 +1,7 @@
 #include "yolov8.h"
 #include <opencv2/cudaimgproc.hpp>
-
+using namespace cv;
+using namespace std;
 YoloV8::YoloV8(const std::string &onnxModelPath, const YoloV8Config &config)
     : PROBABILITY_THRESHOLD(config.probabilityThreshold), NMS_THRESHOLD(config.nmsThreshold), TOP_K(config.topK),
       SEG_CHANNELS(config.segChannels), SEG_H(config.segH), SEG_W(config.segW), SEGMENTATION_THRESHOLD(config.segmentationThreshold),
@@ -133,6 +134,15 @@ std::vector<Object> YoloV8::detectObjects(const cv::Mat &inputImageBGR) {
     // Call detectObjects with the GPU image
     return detectObjects(gpuImg);
 }
+Mat YoloV8::process(Mat target_img, const vector<float> source_face_embedding, const vector<Point2f> target_landmark_5)
+{
+    Mat affine_matrix;
+    Mat box_mask;
+    return affine_matrix;
+
+}
+
+
 
 std::vector<Object> YoloV8::postProcessSegmentation(std::vector<std::vector<float>> &featureVectors) {
     const auto &outputDims = m_trtEngine->getOutputDims();

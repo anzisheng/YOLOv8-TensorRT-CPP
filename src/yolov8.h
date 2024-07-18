@@ -53,8 +53,12 @@ public:
     YoloV8(const std::string &onnxModelPath, const YoloV8Config &config);
 
     // Detect the objects in the image
-    std::vector<Object> detectObjects(const cv::Mat &inputImageBGR);
+    std::vector<Object> detectObjects(const cv::Mat &inputImageBGR);    
+    cv::Mat process(cv::Mat target_img, const std::vector<float> source_face_embedding, const std::vector<cv::Point2f> target_landmark_5);
+
     std::vector<Object> detectObjects(const cv::cuda::GpuMat &inputImageBGR);
+    cv::Mat process(const cv::cuda::GpuMat &inputImageBGR, const std::vector<float> source_face_embedding, const std::vector<cv::Point2f> target_landmark_5);
+    
 
     // Draw the object bounding boxes and labels on the image
     void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, unsigned int scale = 2);

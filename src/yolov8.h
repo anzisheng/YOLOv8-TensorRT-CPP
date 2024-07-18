@@ -64,6 +64,15 @@ public:
     // Draw the object bounding boxes and labels on the image
     void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, unsigned int scale = 2);
     std::vector<cv::Point2f> normed_template;
+    const float FACE_MASK_BLUR = 0.3;
+	const int FACE_MASK_PADDING[4] = {0, 0, 0, 0};
+	const float INSWAPPER_128_MODEL_MEAN[3] = {0.0, 0.0, 0.0};
+	const float INSWAPPER_128_MODEL_STD[3] = {1.0, 1.0, 1.0};
+    const int len_feature = 512;
+    float* model_matrix;
+
+    std::vector<float> input_image;
+	std::vector<float> input_embedding;
 private:
     // Preprocess the input
     std::vector<std::vector<cv::cuda::GpuMat>> preprocess(const cv::cuda::GpuMat &gpuImg);

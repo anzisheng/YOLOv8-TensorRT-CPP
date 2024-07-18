@@ -39,6 +39,17 @@ YoloV8::YoloV8(const std::string &onnxModelPath, const YoloV8Config &config)
     this->normed_template.emplace_back(Point2f(64.02519936, 71.73660032));
     this->normed_template.emplace_back(Point2f(49.54930048, 92.36550016));
     this->normed_template.emplace_back(Point2f(78.72989952, 92.20409984));
+
+    const int length = this->len_feature*this->len_feature;
+    this->model_matrix = new float[length];
+    cout<<"start read model_matrix.bin"<<endl;
+    FILE* fp = fopen("./model_matrix.bin", "rb");
+    size_t ret = fread(this->model_matrix, sizeof(float), length, fp);//导入数据
+    if (ret) {}
+    fclose(fp);//关闭文件
+    cout<<"read model_matrix.bin finish"<<endl;
+
+
 }
 
 std::vector<std::vector<cv::cuda::GpuMat>> YoloV8::preprocess(const cv::cuda::GpuMat &gpuImg) {
@@ -148,15 +159,98 @@ std::vector<std::vector<cv::cuda::GpuMat>>  YoloV8::preprocess(Mat srcimg, const
     cout << "go into warp_face_by_face_landmark_5"<<endl;
     affine_matrix = warp_face_by_face_landmark_5(srcimg, crop_img, face_landmark_5, this->normed_template, Size(128, 128));
     imwrite("SwapFaceCrop.jpg", crop_img);
-    std::vector<std::vector<cv::cuda::GpuMat>> temp;
-    return temp;
+    cout <<"affine_matrix:\n";
+    cout << affine_matrix<<endl;
+    const int crop_size[2] = {crop_img.cols, crop_img.rows};
+    box_mask = create_static_box_mask(crop_size, this->FACE_MASK_BLUR, this->FACE_MASK_PADDING);
+    cout <<"box_mask:\n";
+    cout << crop_img.cols<< "   "<< crop_img.rows<<endl;
+    cout << box_mask<<endl;
+
+    float linalg_norm = 0;
+    for(int i=0;i<this->len_feature;i++)
+    {
+        linalg_norm += powf(source_face_embedding[i], 2);
+    }
+    cout <<"linalg_norm = "<< linalg_norm<<endl;
+    linalg_norm = sqrt(linalg_norm);
+    this->input_embedding.resize(this->len_feature);
+    for(int i=0;i<this->len_feature;i++)
+    {
+        float sum=0;
+        for(int j=0;j<this->len_feature;j++)
+        {
+            sum += (source_face_embedding[j]*this->model_matrix[j*this->len_feature+i]);
+        }
+        //cout << "sum = " << sum << endl;
+        this->input_embedding[i] = sum/linalg_norm;
+    }
+
+
+    
+    cv::cuda::GpuMat gpuImg;
+    gpuImg.upload(crop_img);
+
+    const auto &inputDims = m_trtEngine->getInputDims();
+    // Convert the image from BGR to RGB
+    cv::cuda::GpuMat rgbMat;    
+    cv::cuda::cvtColor(gpuImg, rgbMat, cv::COLOR_BGR2RGB);
+
+    // Mat temp2;
+    // rgbMat.download(temp2);
+     
+    auto resized = rgbMat;
+    //imwrite("resized.jpg", temp2);
+    //cout << "resized image"<<endl;
+
+    cout << "resied width and height :"<<inputDims[0].d[1]<<"  "<< inputDims[0].d[2] <<endl;
+     // Resize to the model expected input size while maintaining the aspect ratio with the use of padding
+    if (resized.rows != inputDims[0].d[1] || resized.cols != inputDims[0].d[2]) {
+        // Only resize if not already the right size to avoid unecessary copy
+        resized = Engine<float>::resizeKeepAspectRatioPadRightBottom(rgbMat, inputDims[0].d[1], inputDims[0].d[2]);
+    }
+
+    int nbChannels=512;
+    cv::Mat m(0,0, CV_8UC(nbChannels));
+    cout << "embedding_input：c:"<< m.channels()<<" H: "<<m.rows <<"  W:"<<m.cols<<endl;
+
+    cv::cuda::GpuMat gpu_input_embedding =  cv::cuda::GpuMat(m);
+    cout << "gpu embedding c:"<<  gpu_input_embedding.channels()<<" H:" << gpu_input_embedding.rows << "W: "<<gpu_input_embedding.cols<<endl;
+
+    cv::cuda::GpuMat gpu_input_embedding2 = gpu_input_embedding.reshape(512);
+    cout << "gpu embedding2 c: "<< gpu_input_embedding2.channels()<<endl;
+
+   
+
+    // Convert to format expected by our inference engine
+    // The reason for the strange format is because it supports models with multiple inputs as well as batching
+    // In our case though, the model only has a single input and we are using a batch size of 1.
+    std::vector<cv::cuda::GpuMat> input{std::move(resized)};
+    if(inputDims.size() == 2)
+    {
+        cout << "need embedding into inputs"<<endl;
+        input.push_back(gpu_input_embedding2);        
+    }
+
+
+    std::vector<std::vector<cv::cuda::GpuMat>> inputs{std::move(input)};
+    
+    //std::vector<std::vector<cv::cuda::GpuMat>> temp;
+    return inputs;
 }
 Mat YoloV8::process(Mat target_img, const vector<float> source_face_embedding, const vector<Point2f> target_landmark_5)
 {
     Mat affine_matrix;
     Mat box_mask;
     cout << "begin to preprocess"<<endl;
-    this->preprocess(target_img, target_landmark_5, source_face_embedding, affine_matrix, box_mask);
+    const auto input = this->preprocess(target_img, target_landmark_5, source_face_embedding, affine_matrix, box_mask);
+    cout << "after preprocess, input .size is "<< input.size()<<endl;
+
+    std::vector<std::vector<std::vector<float>>> featureVectors;
+    auto succ = m_trtEngine->runInference(input, featureVectors);
+    if (!succ) {
+        throw std::runtime_error("Error: Unable to run inference.");
+    }
 
     return affine_matrix;
 

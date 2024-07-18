@@ -165,7 +165,7 @@ std::vector<std::vector<cv::cuda::GpuMat>>  YoloV8::preprocess(Mat srcimg, const
     box_mask = create_static_box_mask(crop_size, this->FACE_MASK_BLUR, this->FACE_MASK_PADDING);
     cout <<"box_mask:\n";
     cout << crop_img.cols<< "   "<< crop_img.rows<<endl;
-    cout << box_mask<<endl;
+    //cout << box_mask<<endl;
 
     float linalg_norm = 0;
     for(int i=0;i<this->len_feature;i++)
@@ -218,7 +218,7 @@ std::vector<std::vector<cv::cuda::GpuMat>>  YoloV8::preprocess(Mat srcimg, const
     cout << "gpu embedding c:"<<  gpu_input_embedding.channels()<<" H:" << gpu_input_embedding.rows << "W: "<<gpu_input_embedding.cols<<endl;
 
     cv::cuda::GpuMat gpu_input_embedding2 = gpu_input_embedding.reshape(512);
-    cout << "gpu embedding2 c: "<< gpu_input_embedding2.channels()<<endl;
+    cout << "gpu embedding2 c: "<< gpu_input_embedding2.channels()<<" H: " << gpu_input_embedding2.rows << " W: "<<gpu_input_embedding2.cols<<endl;
 
    
 
@@ -226,14 +226,16 @@ std::vector<std::vector<cv::cuda::GpuMat>>  YoloV8::preprocess(Mat srcimg, const
     // The reason for the strange format is because it supports models with multiple inputs as well as batching
     // In our case though, the model only has a single input and we are using a batch size of 1.
     std::vector<cv::cuda::GpuMat> input{std::move(resized)};
-    if(inputDims.size() == 2)
-    {
-        cout << "need embedding into inputs"<<endl;
-        input.push_back(gpu_input_embedding2);        
-    }
-
+    // if(inputDims.size() == 2)
+    // {
+    //     cout << "need embedding into inputs"<<endl;
+    //     input.push_back(gpu_input_embedding2);        
+    // }
+    std::vector<cv::cuda::GpuMat> input2{std::move(gpu_input_embedding2)};
 
     std::vector<std::vector<cv::cuda::GpuMat>> inputs{std::move(input)};
+    inputs.push_back(std::move(input2));
+    //std::vector<std::vector<cv::cuda::GpuMat>> inputs{std::move(input2)};
     
     //std::vector<std::vector<cv::cuda::GpuMat>> temp;
     return inputs;
@@ -247,7 +249,10 @@ Mat YoloV8::process(Mat target_img, const vector<float> source_face_embedding, c
     cout << "after preprocess, input .size is "<< input.size()<<endl;
 
     std::vector<std::vector<std::vector<float>>> featureVectors;
-    auto succ = m_trtEngine->runInference(input, featureVectors);
+    //auto succ = m_trtEngine->runInference(input, featureVectors);
+    //auto succ = m_trtEngine->runInference_2v1(input, featureVectors);
+    cout << "input number: " << input.size()<<endl;
+    auto succ = m_trtEngine->runInference_1v2(input, featureVectors);
     if (!succ) {
         throw std::runtime_error("Error: Unable to run inference.");
     }

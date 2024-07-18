@@ -43,18 +43,19 @@ int main(int argc, char *argv[]) {
         cout << "cann't open embedding.txt"<<endl;
     }
     std::cout <<"embedding.txt:" << endl;
-    float x; 
-    for(int i = 0; i< 512/*source_face_embedding.size()*/; i++)
-    {
-        cout << i <<"  :";
-        srcFile_emb >> x; 
-        //std::cout << x <<"  ";
-        source_face_embedding[i] = x;
-        std::cout << source_face_embedding[i] <<"  ";
-        cout << endl;        
-    }
-    srcFile_emb.close();
-    cout << endl;
+    
+    // float x; 
+    // for(int i = 0; i< 512/*source_face_embedding.size()*/; i++)
+    // {
+    //     cout << i <<"  :";
+    //     srcFile_emb >> x; 
+    //     //std::cout << x <<"  ";
+    //     source_face_embedding[i] = x;
+    //     std::cout << source_face_embedding[i] <<"  ";
+    //     cout << endl;        
+    // }
+    // srcFile_emb.close();
+    // cout << endl;
 
     //2. 
     std::vector<cv::Point2f> target_landmark_5(5);

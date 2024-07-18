@@ -24,12 +24,12 @@ set(TensorRT_DIR /usr/local/TensorRT-8.6.1.6/)
 add_subdirectory(libs/tensorrt-cpp-api)
 
 # Build the YoloV8 library
-add_library(YoloV8_TRT SHARED src/yolov8.cpp)
+add_library(YoloV8_TRT SHARED src/yolov8.cpp src/utils.cpp)
 target_link_libraries(YoloV8_TRT PUBLIC tensorrt_cpp_api ${OpenCV_LIBS})
 target_include_directories(YoloV8_TRT PUBLIC libs/tensorrt-cpp-api/src)
 
 # Build and link the executables
-add_executable(detect_object_image src/object_detection_image.cpp)
+add_executable(detect_object_image src/object_detection_image.cpp )
 target_link_libraries(detect_object_image YoloV8_TRT)
 
 add_executable(benchmark src/benchmark.cpp)

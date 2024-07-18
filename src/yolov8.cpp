@@ -1,5 +1,6 @@
 #include "yolov8.h"
 #include <opencv2/cudaimgproc.hpp>
+#include "utils.h"
 using namespace cv;
 using namespace std;
 YoloV8::YoloV8(const std::string &onnxModelPath, const YoloV8Config &config)
@@ -32,6 +33,12 @@ YoloV8::YoloV8(const std::string &onnxModelPath, const YoloV8Config &config)
                                    "Try increasing TensorRT log severity to kVERBOSE (in /libs/tensorrt-cpp-api/engine.cpp).";
         throw std::runtime_error(errMsg);
     }
+
+    this->normed_template.emplace_back(Point2f(46.29459968, 51.69629952));
+    this->normed_template.emplace_back(Point2f(81.53180032, 51.50140032));
+    this->normed_template.emplace_back(Point2f(64.02519936, 71.73660032));
+    this->normed_template.emplace_back(Point2f(49.54930048, 92.36550016));
+    this->normed_template.emplace_back(Point2f(78.72989952, 92.20409984));
 }
 
 std::vector<std::vector<cv::cuda::GpuMat>> YoloV8::preprocess(const cv::cuda::GpuMat &gpuImg) {
@@ -134,11 +141,26 @@ std::vector<Object> YoloV8::detectObjects(const cv::Mat &inputImageBGR) {
     // Call detectObjects with the GPU image
     return detectObjects(gpuImg);
 }
+
+std::vector<std::vector<cv::cuda::GpuMat>>  YoloV8::preprocess(Mat srcimg, const vector<Point2f> face_landmark_5, const vector<float> source_face_embedding, Mat& affine_matrix, Mat& box_mask)
+{
+    Mat crop_img;
+    cout << "go into warp_face_by_face_landmark_5"<<endl;
+    affine_matrix = warp_face_by_face_landmark_5(srcimg, crop_img, face_landmark_5, this->normed_template, Size(128, 128));
+    imwrite("SwapFaceCrop.jpg", crop_img);
+    std::vector<std::vector<cv::cuda::GpuMat>> temp;
+    return temp;
+}
 Mat YoloV8::process(Mat target_img, const vector<float> source_face_embedding, const vector<Point2f> target_landmark_5)
 {
     Mat affine_matrix;
     Mat box_mask;
+    cout << "begin to preprocess"<<endl;
+    this->preprocess(target_img, target_landmark_5, source_face_embedding, affine_matrix, box_mask);
+
     return affine_matrix;
+
+
 
 }
 

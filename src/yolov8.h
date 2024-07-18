@@ -59,10 +59,11 @@ public:
     std::vector<Object> detectObjects(const cv::cuda::GpuMat &inputImageBGR);
     cv::Mat process(const cv::cuda::GpuMat &inputImageBGR, const std::vector<float> source_face_embedding, const std::vector<cv::Point2f> target_landmark_5);
     
+    std::vector<std::vector<cv::cuda::GpuMat>>  preprocess(cv::Mat target_img, const std::vector<cv::Point2f> face_landmark_5, const std::vector<float> source_face_embedding, cv::Mat& affine_matrix, cv::Mat& box_mask);
 
     // Draw the object bounding boxes and labels on the image
     void drawObjectLabels(cv::Mat &image, const std::vector<Object> &objects, unsigned int scale = 2);
-
+    std::vector<cv::Point2f> normed_template;
 private:
     // Preprocess the input
     std::vector<std::vector<cv::cuda::GpuMat>> preprocess(const cv::cuda::GpuMat &gpuImg);

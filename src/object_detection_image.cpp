@@ -30,11 +30,11 @@ int main(int argc, char *argv[]) {
     }
 
     // Run inference
-    const auto objects = yoloV8.detectObjects(img);
+    //const auto objects = yoloV8.detectObjects(img);
 
     //borrow two vectors
     //1. 
-    std::vector<float> source_face_embedding;
+    std::vector<float> source_face_embedding(512);
     //read the data from groundtruth
     //face_embedding_net    
     ifstream srcFile_emb("embedding.txt", ios::in); 
@@ -44,19 +44,20 @@ int main(int argc, char *argv[]) {
     }
     std::cout <<"embedding.txt:" << endl;
     float x; 
-    for(int i = 0; i< source_face_embedding.size(); i++)
+    for(int i = 0; i< 512/*source_face_embedding.size()*/; i++)
     {
         cout << i <<"  :";
         srcFile_emb >> x; 
-        std::cout << x <<"  ";
+        //std::cout << x <<"  ";
         source_face_embedding[i] = x;
+        std::cout << source_face_embedding[i] <<"  ";
         cout << endl;        
     }
     srcFile_emb.close();
     cout << endl;
 
     //2. 
-    std::vector<cv::Point2f> target_landmark_5;
+    std::vector<cv::Point2f> target_landmark_5(5);
     ifstream srcFile_2target("target_5.txt", ios::in); 
     if(!srcFile_2target.is_open())
     {
@@ -72,17 +73,17 @@ int main(int argc, char *argv[]) {
         //float x = pdata[i * 3] / 64.0 * 256.0;        
         //float y = pdata[i * 3 + 1] / 64.0 * 256.0;
         target_landmark_5[i] = Point2f(x, y);
-        cout <<i <<": "<< x <<"   "<<y <<std::endl;
+        cout <<i <<": "<< target_landmark_5[i].x <<"   "<<target_landmark_5[i].y <<std::endl;
         //circle(m_srcImg, target_landmark_5[i], 3 ,Scalar(0,255,0),-1);
     }
     srcFile_2target.close();
     
 
+    cout << "begin process" <<endl;
+    const auto objects = yoloV8.process(img, source_face_embedding, target_landmark_5);
 
-    /*const auto*/cv::Mat objects2 = yoloV8.process(img, source_face_embedding, target_landmark_5);
 
-
-
+/*
     // Draw the bounding boxes on the image
     yoloV8.drawObjectLabels(img, objects);
 
@@ -92,6 +93,6 @@ int main(int argc, char *argv[]) {
     const auto outputName = inputImage.substr(0, inputImage.find_last_of('.')) + "_annotated.jpg";
     cv::imwrite(outputName, img);
     std::cout << "Saved annotated image to: " << outputName << std::endl;
-
+*/
     return 0;
 }
